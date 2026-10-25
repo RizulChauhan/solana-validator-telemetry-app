@@ -3,26 +3,37 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Solana Transaction & Validator Telemetry Receipt — Clean Minimalist Explorer</title>
+  <title>AetherScan — Solana Validator Telemetry & Execution Receipt</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
   <style>
     :root {
-      --bg: #FAFBFC;
-      --card-bg: #FFFFFF;
-      --border: #EAECF0;
-      --border-subtle: #F2F4F7;
-      --text-main: #101828;
-      --text-secondary: #475467;
-      --text-muted: #98A2B3;
-      --green-bg: #ECFDF3;
-      --green-border: #D1FADF;
-      --green-text: #027A48;
-      --solana-purple: #9945FF;
-      --solana-green: #14F195;
-      --accent-blue: #0062FF;
-      --tag-gray: #F2F4F7;
+      /* Refined Minimalist Titanium Grey Palette - Eye-Comfort Calibrated */
+      --bg-base: #181C24;
+      --bg-canvas: #1C212B;
+      --surface-card: #222834;
+      --surface-card-elevated: #28303E;
+      --surface-inset: #161A22;
+      
+      --border-subtle: rgba(255, 255, 255, 0.08);
+      --border-medium: rgba(255, 255, 255, 0.14);
+      --border-accent: rgba(129, 140, 248, 0.35);
+
+      --text-white: #FFFFFF;
+      --text-primary: #F1F5F9;
+      --text-secondary: #CBD5E1;
+      --text-muted: #8E9BAE;
+
+      /* Smooth Eye-Comfort Vibrant Gradients */
+      --grad-hero: linear-gradient(135deg, #6366F1 0%, #A855F7 50%, #EC4899 100%);
+      --grad-solana: linear-gradient(135deg, #9945FF 0%, #14F195 100%);
+      --grad-emerald: linear-gradient(135deg, #10B981 0%, #059669 100%);
+      --grad-amber: linear-gradient(135deg, #F59E0B 0%, #D97706 100%);
+      --grad-card: linear-gradient(180deg, rgba(38, 45, 59, 0.75) 0%, rgba(30, 36, 48, 0.85) 100%);
+      --grad-button: linear-gradient(135deg, #6366F1 0%, #8B5CF6 100%);
+      --grad-accent-border: linear-gradient(90deg, #6366F1, #A855F7, #14F195);
+
       --font-sans: 'Plus Jakarta Sans', -apple-system, sans-serif;
       --font-mono: 'JetBrains Mono', monospace;
     }
@@ -34,507 +45,844 @@
     }
 
     body {
-      background-color: var(--bg);
-      color: var(--text-main);
+      background: radial-gradient(circle at 50% 0%, #252D3D 0%, #181C24 60%, #13161D 100%);
+      color: var(--text-primary);
       font-family: var(--font-sans);
-      -webkit-font-smoothing: antialiased;
-      padding: 32px 24px 64px 24px;
+      min-height: 100vh;
       display: flex;
       flex-direction: column;
       align-items: center;
+      padding: 28px 36px 48px 36px;
+      overflow-x: hidden;
+      position: relative;
     }
 
-    .top-bar {
-      max-width: 1180px;
+    /* Ambient Soft Eye-Friendly Glows */
+    body::before {
+      content: "";
+      position: absolute;
+      top: -100px;
+      left: 20%;
+      width: 700px;
+      height: 450px;
+      background: radial-gradient(ellipse, rgba(99, 102, 241, 0.16) 0%, rgba(168, 85, 247, 0.08) 50%, transparent 70%);
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    body::after {
+      content: "";
+      position: absolute;
+      top: 40px;
+      right: 18%;
+      width: 600px;
+      height: 400px;
+      background: radial-gradient(ellipse, rgba(20, 241, 149, 0.11) 0%, rgba(16, 185, 129, 0.04) 50%, transparent 70%);
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    .app-container {
+      max-width: 1240px;
       width: 100%;
+      position: relative;
+      z-index: 1;
+    }
+
+    /* Top Navigation Header */
+    .header-nav {
       display: flex;
       justify-content: space-between;
       align-items: center;
       margin-bottom: 24px;
+      padding-bottom: 18px;
+      border-bottom: 1px solid var(--border-subtle);
     }
 
-    .brand {
+    .brand-section {
       display: flex;
       align-items: center;
-      gap: 12px;
-      font-weight: 700;
-      font-size: 1.15rem;
-      letter-spacing: -0.02em;
+      gap: 14px;
     }
 
-    .brand-pill {
-      background: #111;
-      color: #fff;
-      padding: 4px 10px;
-      border-radius: 6px;
-      font-size: 0.75rem;
-      font-weight: 600;
-      font-family: var(--font-mono);
-    }
-
-    .network-badge {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      font-size: 0.85rem;
-      color: var(--text-secondary);
-      background: #fff;
-      padding: 6px 14px;
-      border-radius: 100px;
-      border: 1px solid var(--border);
-      font-weight: 500;
-    }
-
-    .pulse-dot {
-      width: 8px;
-      height: 8px;
-      border-radius: 50%;
-      background: var(--solana-green);
-      box-shadow: 0 0 0 3px rgba(20, 241, 149, 0.25);
-    }
-
-    /* Search bar */
-    .search-box {
-      max-width: 1180px;
-      width: 100%;
-      background: #FFFFFF;
-      border: 1px solid var(--border);
+    .brand-badge-logo {
+      width: 40px;
+      height: 40px;
       border-radius: 12px;
-      padding: 8px 12px;
+      background: var(--grad-solana);
       display: flex;
       align-items: center;
-      gap: 12px;
-      box-shadow: 0 1px 3px rgba(16, 24, 40, 0.05);
-      margin-bottom: 32px;
+      justify-content: center;
+      box-shadow: 0 4px 20px rgba(153, 69, 255, 0.4);
     }
 
-    .search-input {
-      border: none;
-      outline: none;
-      font-family: var(--font-mono);
-      font-size: 0.85rem;
-      color: var(--text-secondary);
-      flex: 1;
-      background: transparent;
-    }
-
-    .search-btn {
-      background: #101828;
-      color: #fff;
-      border: none;
-      padding: 8px 18px;
-      border-radius: 8px;
-      font-weight: 600;
-      font-size: 0.85rem;
-      cursor: pointer;
-    }
-
-    /* Main Container Grid */
-    .explorer-grid {
-      max-width: 1180px;
-      width: 100%;
-      display: grid;
-      grid-template-columns: 1.8fr 1.1fr;
-      gap: 28px;
-    }
-
-    /* Left Card: Transaction Receipt */
-    .receipt-card {
-      background: var(--card-bg);
-      border: 1px solid var(--border);
-      border-radius: 16px;
-      padding: 32px;
-      box-shadow: 0 2px 6px rgba(16, 24, 40, 0.04);
-    }
-
-    .status-row {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      margin-bottom: 20px;
-    }
-
-    .badge-success {
-      background: var(--green-bg);
-      border: 1px solid var(--green-border);
-      color: var(--green-text);
-      font-size: 0.78rem;
-      font-weight: 700;
-      letter-spacing: 0.03em;
-      padding: 4px 10px;
-      border-radius: 6px;
-      text-transform: uppercase;
-      font-family: var(--font-mono);
-    }
-
-    .sub-status {
-      font-size: 0.85rem;
-      color: var(--text-muted);
-    }
-
-    .tx-title {
-      font-size: 1.75rem;
+    .brand-title {
+      font-size: 1.35rem;
       font-weight: 800;
       letter-spacing: -0.03em;
-      margin-bottom: 8px;
+      color: var(--text-white);
       display: flex;
       align-items: center;
       gap: 10px;
     }
 
-    .verified-pill {
+    .tag-version {
       font-size: 0.7rem;
-      font-weight: 600;
-      padding: 3px 8px;
-      border-radius: 4px;
-      background: #FEF3F2;
-      color: #B42318;
-      border: 1px solid #FECDCA;
+      font-weight: 700;
+      font-family: var(--font-mono);
+      padding: 3px 9px;
+      border-radius: 6px;
+      background: rgba(99, 102, 241, 0.18);
+      border: 1px solid rgba(99, 102, 241, 0.35);
+      color: #C7D2FE;
+      letter-spacing: 0.06em;
     }
 
-    .tx-meta {
-      font-size: 0.85rem;
-      color: var(--text-muted);
-      margin-bottom: 32px;
+    .telemetry-pills {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-size: 0.8rem;
     }
 
-    /* Swap Flow Visual Box */
-    .swap-flow {
-      background: #F8F9FC;
+    .pill-data {
+      background: var(--surface-card);
+      border: 1px solid var(--border-subtle);
+      padding: 6px 14px;
+      border-radius: 100px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      color: var(--text-secondary);
+      font-family: var(--font-mono);
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+    }
+
+    .live-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: #14F195;
+      box-shadow: 0 0 12px #14F195;
+    }
+
+    /* Minimalist Search / Query Bar */
+    .search-container {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 24px;
+    }
+
+    .search-box {
+      flex: 1;
+      background: var(--surface-card);
       border: 1px solid var(--border-subtle);
       border-radius: 14px;
-      padding: 24px 28px;
+      padding: 11px 18px;
       display: flex;
-      justify-content: space-between;
       align-items: center;
-      margin-bottom: 32px;
+      gap: 12px;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+      transition: all 0.2s ease;
     }
 
-    .swap-col {
+    .search-box:focus-within {
+      border-color: rgba(168, 85, 247, 0.5);
+      box-shadow: 0 0 0 3px rgba(168, 85, 247, 0.15);
+    }
+
+    .search-input {
+      background: transparent;
+      border: none;
+      outline: none;
+      color: var(--text-white);
+      font-family: var(--font-mono);
+      font-size: 0.84rem;
+      width: 100%;
+    }
+
+    .btn-search {
+      background: var(--grad-button);
+      border: none;
+      color: #FFFFFF;
+      font-family: var(--font-sans);
+      font-size: 0.82rem;
+      font-weight: 700;
+      padding: 12px 26px;
+      border-radius: 12px;
+      cursor: pointer;
+      box-shadow: 0 4px 18px rgba(99, 102, 241, 0.35);
+      white-space: nowrap;
+      transition: transform 0.15s, opacity 0.2s;
+    }
+
+    .btn-search:hover {
+      opacity: 0.94;
+      transform: translateY(-1px);
+    }
+
+    /* Visual Execution Pipeline Tracker */
+    .pipeline-bar {
+      background: var(--surface-card);
+      border: 1px solid var(--border-subtle);
+      border-radius: 14px;
+      padding: 14px 24px;
+      margin-bottom: 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.18);
+    }
+
+    .pipeline-node {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .node-glyph {
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      background: rgba(20, 241, 149, 0.15);
+      border: 1.5px solid #14F195;
+      color: #14F195;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.74rem;
+      font-weight: 800;
+      font-family: var(--font-mono);
+    }
+
+    .node-text {
       display: flex;
       flex-direction: column;
     }
 
-    .swap-label {
-      font-size: 0.75rem;
-      font-weight: 600;
-      text-transform: uppercase;
-      color: var(--text-muted);
-      margin-bottom: 6px;
-      letter-spacing: 0.04em;
+    .node-title {
+      font-size: 0.8rem;
+      font-weight: 700;
+      color: var(--text-white);
     }
 
-    .swap-val {
-      font-size: 1.85rem;
-      font-weight: 800;
-      letter-spacing: -0.02em;
+    .node-sub {
+      font-size: 0.7rem;
+      color: var(--text-muted);
+      font-family: var(--font-mono);
+    }
+
+    .pipeline-wire {
+      flex: 1;
+      height: 2px;
+      background: linear-gradient(90deg, #14F195 0%, #6366F1 50%, #A855F7 100%);
+      margin: 0 16px;
+      opacity: 0.5;
+    }
+
+    /* Bento Grid Layout */
+    .bento-grid {
+      display: grid;
+      grid-template-columns: 1.65fr 1fr;
+      gap: 24px;
+    }
+
+    .bento-card {
+      background: var(--grad-card);
+      border: 1px solid var(--border-subtle);
+      border-radius: 18px;
+      padding: 26px 28px;
+      box-shadow: 0 8px 30px rgba(0, 0, 0, 0.22);
+      backdrop-filter: blur(12px);
+      position: relative;
+    }
+
+    /* Card Top Status Row */
+    .card-header-row {
       display: flex;
-      align-items: center;
-      gap: 8px;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 18px;
     }
 
-    .swap-usd {
-      font-size: 0.85rem;
+    .status-finalized-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: rgba(20, 241, 149, 0.12);
+      border: 1px solid rgba(20, 241, 149, 0.35);
+      color: #14F195;
+      font-size: 0.74rem;
+      font-weight: 700;
+      font-family: var(--font-mono);
+      letter-spacing: 0.04em;
+      padding: 5px 12px;
+      border-radius: 8px;
+    }
+
+    .header-subtext {
       color: var(--text-muted);
+      font-size: 0.76rem;
       margin-top: 4px;
     }
 
-    .swap-arrow {
-      width: 40px;
-      height: 40px;
+    .headline-action {
+      font-size: 1.65rem;
+      font-weight: 800;
+      letter-spacing: -0.03em;
+      color: var(--text-white);
+      margin-bottom: 4px;
+    }
+
+    /* Visual Token Swap Widget with Eye-Comfort Color Gradients */
+    .swap-widget {
+      background: var(--surface-inset);
+      border: 1px solid var(--border-subtle);
+      border-radius: 16px;
+      padding: 20px 24px;
+      margin-bottom: 22px;
+      display: grid;
+      grid-template-columns: 1fr auto 1fr;
+      align-items: center;
+      gap: 20px;
+      position: relative;
+      overflow: hidden;
+      box-shadow: inset 0 2px 8px rgba(0, 0, 0, 0.2);
+    }
+
+    .swap-widget::after {
+      content: "";
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 2px;
+      background: var(--grad-accent-border);
+    }
+
+    .token-pane {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .pane-label {
+      font-size: 0.7rem;
+      font-weight: 700;
+      letter-spacing: 0.07em;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      margin-bottom: 4px;
+    }
+
+    .pane-amount {
+      font-size: 1.75rem;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+      color: var(--text-white);
+      display: flex;
+      align-items: baseline;
+      gap: 8px;
+    }
+
+    .pane-symbol-sol {
+      font-size: 1.05rem;
+      color: #A5B4FC;
+      font-weight: 700;
+    }
+
+    .pane-symbol-token {
+      font-size: 1.05rem;
+      color: #34D399;
+      font-weight: 700;
+    }
+
+    .pane-usd {
+      font-size: 0.78rem;
+      color: var(--text-muted);
+      margin-top: 3px;
+      font-family: var(--font-mono);
+    }
+
+    .swap-connector-circle {
+      width: 42px;
+      height: 42px;
       border-radius: 50%;
-      background: #FFFFFF;
-      border: 1px solid var(--border);
+      background: var(--surface-card-elevated);
+      border: 1px solid var(--border-medium);
       display: flex;
       align-items: center;
       justify-content: center;
-      font-weight: 700;
-      color: var(--text-secondary);
-      box-shadow: 0 2px 4px rgba(0,0,0,0.03);
+      color: #C084FC;
+      box-shadow: 0 4px 14px rgba(0, 0, 0, 0.35);
     }
 
-    /* Actions and Breakdown */
-    .button-group {
+    /* Action Buttons Row */
+    .button-group-row {
       display: flex;
+      align-items: center;
       gap: 12px;
-      margin-bottom: 32px;
+      margin-bottom: 22px;
     }
 
     .btn-secondary {
-      background: #FFFFFF;
-      border: 1px solid var(--border);
-      padding: 10px 18px;
-      border-radius: 8px;
+      background: var(--surface-card);
+      border: 1px solid var(--border-subtle);
+      color: var(--text-secondary);
+      font-size: 0.78rem;
       font-weight: 600;
-      font-size: 0.85rem;
-      color: var(--text-main);
+      padding: 8px 16px;
+      border-radius: 9px;
       display: inline-flex;
       align-items: center;
       gap: 8px;
       text-decoration: none;
-      box-shadow: 0 1px 2px rgba(16,24,40,0.05);
+      transition: all 0.2s ease;
     }
 
-    .table-section-title {
-      font-size: 0.95rem;
+    .btn-secondary:hover {
+      background: var(--surface-card-elevated);
+      color: var(--text-white);
+      border-color: var(--border-medium);
+    }
+
+    /* Ledger Breakdown Section */
+    .ledger-header {
+      font-size: 0.9rem;
       font-weight: 700;
+      letter-spacing: -0.01em;
+      color: var(--text-white);
       margin-bottom: 12px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
     }
 
-    .ledger-table {
+    .ledger-badge-info {
+      font-size: 0.72rem;
+      color: var(--text-muted);
+      font-weight: 500;
+      font-family: var(--font-mono);
+    }
+
+    .ledger-data-table {
       width: 100%;
       border-collapse: collapse;
+      font-size: 0.8rem;
     }
 
-    .ledger-table tr {
+    .ledger-data-table tr {
       border-bottom: 1px solid var(--border-subtle);
     }
 
-    .ledger-table td {
-      padding: 14px 4px;
-      font-size: 0.88rem;
+    .ledger-data-table td {
+      padding: 10px 4px;
+      color: var(--text-secondary);
     }
 
-    .ledger-table td.amount {
+    .delta-debit {
       text-align: right;
       font-family: var(--font-mono);
       font-weight: 600;
-      color: #D92D20;
+      color: #FB7185;
     }
 
-    /* Right Card: Technical Details */
-    .tech-card {
-      background: var(--card-bg);
-      border: 1px solid var(--border);
-      border-radius: 16px;
-      padding: 28px;
-      box-shadow: 0 2px 6px rgba(16, 24, 40, 0.04);
-      height: fit-content;
+    .delta-credit {
+      text-align: right;
+      font-family: var(--font-mono);
+      font-weight: 600;
+      color: #34D399;
     }
 
-    .tech-header {
-      margin-bottom: 24px;
-    }
-
-    .tech-title {
+    /* Right Telemetry Column */
+    .telemetry-title {
       font-size: 1.15rem;
       font-weight: 800;
       letter-spacing: -0.02em;
+      color: var(--text-white);
+      margin-bottom: 2px;
     }
 
-    .tech-subtitle {
-      font-size: 0.8rem;
+    .telemetry-desc {
+      font-size: 0.74rem;
       color: var(--text-muted);
-      margin-top: 2px;
+      margin-bottom: 18px;
     }
 
-    .detail-row {
+    .metric-item {
       display: flex;
       justify-content: space-between;
-      padding: 14px 0;
+      align-items: center;
+      padding: 11px 0;
       border-bottom: 1px solid var(--border-subtle);
-      font-size: 0.88rem;
+      font-size: 0.8rem;
     }
 
-    .detail-label {
-      color: var(--text-secondary);
+    .metric-label {
+      color: var(--text-muted);
       font-weight: 500;
     }
 
-    .detail-val {
+    .metric-val {
       font-weight: 600;
+      color: var(--text-white);
+      font-family: var(--font-mono);
       text-align: right;
-      color: var(--text-main);
     }
 
-    .detail-mono {
-      font-family: var(--font-mono);
-      font-size: 0.82rem;
-    }
-
-    .compute-pill {
-      background: #F8F9FC;
-      border: 1px solid var(--border);
-      padding: 2px 8px;
-      border-radius: 6px;
-      font-size: 0.78rem;
-      font-family: var(--font-mono);
-    }
-
-    .links-footer {
+    .sig-link {
+      color: #93C5FD;
       display: flex;
-      gap: 16px;
-      margin-top: 24px;
-      font-size: 0.8rem;
-      color: var(--accent-blue);
-      font-weight: 600;
+      align-items: center;
+      gap: 6px;
+      text-decoration: none;
     }
 
-    .links-footer a {
-      color: var(--text-secondary);
+    /* Compute Units Visual Meter */
+    .cu-container {
+      margin-top: 6px;
+      background: var(--surface-inset);
+      border-radius: 100px;
+      height: 7px;
+      width: 100%;
+      overflow: hidden;
+    }
+
+    .cu-fill {
+      height: 100%;
+      width: 65.7%;
+      background: linear-gradient(90deg, #6366F1 0%, #A855F7 60%, #10B981 100%);
+      border-radius: 100px;
+    }
+
+    /* Fee Breakdown Micro Bar */
+    .fee-track {
+      display: flex;
+      height: 7px;
+      border-radius: 100px;
+      overflow: hidden;
+      margin-top: 6px;
+      background: var(--surface-inset);
+    }
+
+    .fee-base {
+      width: 42%;
+      background: #6366F1;
+    }
+
+    .fee-prio {
+      width: 58%;
+      background: #10B981;
+    }
+
+    .fee-sub-legend {
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.68rem;
+      color: var(--text-muted);
+      margin-top: 5px;
+      font-family: var(--font-mono);
+    }
+
+    /* Footer Status Bar */
+    .app-footer {
+      margin-top: 24px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 12px 24px;
+      border-radius: 14px;
+      background: var(--surface-card);
+      border: 1px solid var(--border-subtle);
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.18);
+    }
+
+    .footer-nav-links {
+      display: flex;
+      gap: 18px;
+    }
+
+    .footer-nav-links a {
+      color: #A5B4FC;
       text-decoration: none;
+      font-weight: 500;
+    }
+
+    .footer-nav-links a:hover {
+      text-decoration: underline;
     }
   </style>
 </head>
 <body>
 
-  <!-- Top Navigation Bar -->
-  <div class="top-bar">
-    <div class="brand">
-      <span>Solana Telemetry</span>
-      <span class="brand-pill">RECEIPT V2</span>
-    </div>
-    <div class="network-badge">
-      <span class="pulse-dot"></span>
-      <span>Solana Mainnet-Beta</span>
-      <span style="color:var(--text-muted); font-size: 0.8rem;">• SOL $100.72</span>
-    </div>
-  </div>
-
-  <!-- Search Input Bar -->
-  <div class="search-box">
-    <svg width="18" height="18" fill="none" stroke="#98A2B3" stroke-width="2" viewBox="0 0 24 24"><path d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
-    <input type="text" class="search-input" value="4LmnQiQD1qZCb7w1AaE1KLJoS7C1QjPx3AtDDyu45CRwSXovZwFtutKydXoest8q2TgMhHF2FFCtGL7srTBvor8" readonly>
-    <button class="search-btn">Search</button>
-  </div>
-
-  <!-- Main Explorer Grid -->
-  <div class="explorer-grid">
-
-    <!-- LEFT: Transaction Clean Receipt -->
-    <div class="receipt-card">
-      <div class="status-row">
-        <span class="badge-success">SWAP COMPLETE</span>
-        <span class="sub-status">Final, can't be reversed</span>
+  <div class="app-container">
+    <!-- Navbar Header -->
+    <header class="header-nav">
+      <div class="brand-section">
+        <div class="brand-badge-logo">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon>
+          </svg>
+        </div>
+        <div class="brand-title">
+          AetherScan
+          <span class="tag-version">V2.4 PRO TELEMETRY</span>
+        </div>
       </div>
 
-      <h1 class="tx-title">
-        Swapped SOL for zkat
-        <span class="verified-pill">unverified</span>
-      </h1>
-      <p class="tx-meta">By 3Tam...XhUP • Via Jupiter Router • Oct 18, 2026, 22:29 UTC</p>
+      <div class="telemetry-pills">
+        <div class="pill-data">
+          <div class="live-dot"></div>
+          <span>Solana Mainnet-Beta</span>
+        </div>
+        <div class="pill-data">
+          <span>TPS: 2,842</span>
+        </div>
+        <div class="pill-data">
+          <span>SOL: $100.72</span>
+        </div>
+      </div>
+    </header>
 
-      <!-- Clean Swap Flow Box -->
-      <div class="swap-flow">
-        <div class="swap-col">
-          <span class="swap-label">Sent</span>
-          <div class="swap-val">
-            <span>0.5</span>
-            <span style="font-size: 1.1rem; color: var(--text-secondary);">SOL</span>
+    <!-- Search Query Bar -->
+    <div class="search-container">
+      <div class="search-box">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#8E9BAE" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="11" cy="11" r="8"></circle>
+          <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+        </svg>
+        <input 
+          type="text" 
+          class="search-input" 
+          value="4LmnQiQD1qZCb7w1AaE1KLJoS7C1QjPx3AtDDyu45CRwSXovZwFtutKydXoest8q2TgMhHF2FFCtGL7srTBvor8" 
+          readonly
+        />
+      </div>
+      <button class="btn-search">Audit Telemetry</button>
+    </div>
+
+    <!-- Execution Stepper / Pipeline -->
+    <div class="pipeline-bar">
+      <div class="pipeline-node">
+        <div class="node-glyph">✓</div>
+        <div class="node-text">
+          <span class="node-title">Client Dispatch</span>
+          <span class="node-sub">Wallet 3Tam...XhUP</span>
+        </div>
+      </div>
+      <div class="pipeline-wire"></div>
+      <div class="pipeline-node">
+        <div class="node-glyph">✓</div>
+        <div class="node-text">
+          <span class="node-title">Jupiter V6 Router</span>
+          <span class="node-sub">Split-routing optimal path</span>
+        </div>
+      </div>
+      <div class="pipeline-wire"></div>
+      <div class="pipeline-node">
+        <div class="node-glyph">✓</div>
+        <div class="node-text">
+          <span class="node-title">Raydium CLMM Pool</span>
+          <span class="node-sub">Tick 28,490 crossed</span>
+        </div>
+      </div>
+      <div class="pipeline-wire"></div>
+      <div class="pipeline-node">
+        <div class="node-glyph">✓</div>
+        <div class="node-text">
+          <span class="node-title">Cluster Finalization</span>
+          <span class="node-sub">Jito-Solana Leader #14</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Bento Grid Content -->
+    <div class="bento-grid">
+      <!-- Left Bento Card: Execution Receipt & Value Flow -->
+      <div class="bento-card">
+        <div class="card-header-row">
+          <div>
+            <div class="status-finalized-pill">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
+                <polyline points="20 6 9 17 4 12"></polyline>
+              </svg>
+              EXECUTION FINALIZED
+            </div>
+            <div class="header-subtext">Irreversible cluster root • Verified on 1,842 consensus nodes</div>
           </div>
-          <span class="swap-usd">≈ $50.36 USD</span>
+          <span class="tag-version">SWAP EVENT</span>
         </div>
 
-        <div class="swap-arrow">→</div>
+        <h1 class="headline-action">Swapped SOL for zkat</h1>
+        <div class="header-subtext" style="margin-bottom: 22px;">
+          Account: <span style="font-family: var(--font-mono); color: var(--text-white);">3Tam...XhUP</span> • Routed via Jupiter Aggregator • Oct 18, 2026, 22:29:20 UTC
+        </div>
 
-        <div class="swap-col" style="text-align: right;">
-          <span class="swap-label">Got</span>
-          <div class="swap-val">
-            <span style="color: var(--text-main);">340.1K</span>
-            <span style="font-size: 1.1rem; color: var(--text-secondary);">zkat</span>
+        <!-- Swap Value Widget -->
+        <div class="swap-widget">
+          <div class="token-pane">
+            <span class="pane-label">Transferred</span>
+            <div class="pane-amount">
+              0.50 <span class="pane-symbol-sol">SOL</span>
+            </div>
+            <span class="pane-usd">≈ $50.36 USD</span>
           </div>
-          <span class="swap-usd">Balance now 679.3K</span>
+
+          <div class="swap-connector-circle">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+              <line x1="5" y1="12" x2="19" y2="12"></line>
+              <polyline points="12 5 19 12 12 19"></polyline>
+            </svg>
+          </div>
+
+          <div class="token-pane" style="text-align: right;">
+            <span class="pane-label">Received</span>
+            <div class="pane-amount" style="justify-content: flex-end;">
+              340.1K <span class="pane-symbol-token">zkat</span>
+            </div>
+            <span class="pane-usd">Post-balance: 679.3K zkat</span>
+          </div>
+        </div>
+
+        <!-- Action Links -->
+        <div class="button-group-row">
+          <a href="#" class="btn-secondary">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+              <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+            </svg>
+            Copy Signature
+          </a>
+          <a href="#" class="btn-secondary">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path>
+              <polyline points="15 3 21 3 21 9"></polyline>
+              <line x1="10" y1="14" x2="21" y2="3"></line>
+            </svg>
+            Verify on Solscan
+          </a>
+          <a href="#" class="btn-secondary">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <polyline points="16 18 22 12 16 6"></polyline>
+              <polyline points="8 6 2 12 8 18"></polyline>
+            </svg>
+            Raw JSON Trace
+          </a>
+        </div>
+
+        <!-- Ledger Delta Breakdown Table -->
+        <div class="ledger-header">
+          <span>Balance Delta Breakdown</span>
+          <span class="ledger-badge-info">3 State Mutating Instructions</span>
+        </div>
+        <table class="ledger-data-table">
+          <tbody>
+            <tr>
+              <td>Raydium CLMM Invariant Deposit</td>
+              <td class="delta-debit">-0.500000000 SOL</td>
+            </tr>
+            <tr>
+              <td>Integrator Fee to <span style="font-family: var(--font-mono); color: var(--text-white);">HR6x...vCoa</span></td>
+              <td class="delta-debit">-0.004000000 SOL</td>
+            </tr>
+            <tr>
+              <td>App Execution Routing Fee to <span style="font-family: var(--font-mono); color: var(--text-white);">7MPp...4Bwy</span></td>
+              <td class="delta-debit">-0.001000000 SOL</td>
+            </tr>
+            <tr>
+              <td>Token Mint MintTo Credit (zkat)</td>
+              <td class="delta-credit">+340,128.4500 zkat</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Right Bento Card: Hardware & Validator Telemetry -->
+      <div class="bento-card">
+        <h2 class="telemetry-title">Validator Telemetry</h2>
+        <p class="telemetry-desc">BankingStage scheduler & TPU execution metrics</p>
+
+        <div class="metric-item">
+          <span class="metric-label">Signature</span>
+          <a href="#" class="metric-val sig-link">
+            4Lmn...vor8
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+              <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+            </svg>
+          </a>
+        </div>
+
+        <div class="metric-item">
+          <span class="metric-label">Slot (Block)</span>
+          <span class="metric-val">458,600,951</span>
+        </div>
+
+        <div class="metric-item">
+          <span class="metric-label">BankingStage Queue</span>
+          <span class="metric-val" style="color: #34D399;">Multi-threaded TPU #7</span>
+        </div>
+
+        <!-- Compute Units Visual Meter -->
+        <div style="padding: 11px 0; border-bottom: 1px solid var(--border-subtle);">
+          <div style="display: flex; justify-content: space-between; font-size: 0.8rem;">
+            <span class="metric-label">Compute Budget</span>
+            <span class="metric-val">149,955 / 227,931 CU <span style="color: #C7D2FE;">(65.7%)</span></span>
+          </div>
+          <div class="cu-container">
+            <div class="cu-fill"></div>
+          </div>
+        </div>
+
+        <!-- Network Fee & Split Micro Bar -->
+        <div style="padding: 11px 0; border-bottom: 1px solid var(--border-subtle);">
+          <div style="display: flex; justify-content: space-between; font-size: 0.8rem;">
+            <span class="metric-label">Network Fee</span>
+            <span class="metric-val">0.000011803 SOL <span style="color: var(--text-muted); font-size: 0.72rem;">(≈ $0.00118)</span></span>
+          </div>
+          <div class="fee-track">
+            <div class="fee-base" title="Base Fee (5,000 lamports)"></div>
+            <div class="fee-prio" title="Priority / Tip (6,803 lamports)"></div>
+          </div>
+          <div class="fee-sub-legend">
+            <span>Base: 5,000 lamports (42%)</span>
+            <span>Priority: 6,803 lamports (58%)</span>
+          </div>
+        </div>
+
+        <div class="metric-item">
+          <span class="metric-label">Tx Version</span>
+          <span class="metric-val" style="color: #C084FC;">v0 (1 Address Lookup Table)</span>
+        </div>
+
+        <div class="metric-item">
+          <span class="metric-label">Memory Footprint</span>
+          <span class="metric-val">11 Accounts (144 bytes compressed)</span>
+        </div>
+
+        <div class="metric-item">
+          <span class="metric-label">Blockhash</span>
+          <span class="metric-val" style="font-size: 0.74rem; color: var(--text-secondary);">7k4U...tq2S</span>
+        </div>
+
+        <div class="metric-item" style="border-bottom: none;">
+          <span class="metric-label">MEV Protection</span>
+          <span class="metric-val" style="color: #14F195;">Jito-Bundle Protected</span>
         </div>
       </div>
-
-      <!-- Action Buttons -->
-      <div class="button-group">
-        <a href="#" class="btn-secondary">
-          <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M10 13a5 5 0 007.54.54l3-3a5 5 0 00-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 00-7.54-.54l-3 3a5 5 0 007.07 7.07l1.71-1.71"/></svg>
-          Copy link
-        </a>
-        <a href="https://solscan.io" target="_blank" class="btn-secondary">
-          <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6"/><path d="M15 3h6v6"/><path d="M10 14L21 3"/></svg>
-          View on Solscan
-        </a>
-      </div>
-
-      <!-- Where the money went (Audit Ledger) -->
-      <h3 class="table-section-title">Where the money went</h3>
-      <p style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 12px;">All transfers verified from leader block assembly and BankingStage write-locks:</p>
-      
-      <table class="ledger-table">
-        <tbody>
-          <tr>
-            <td>For the swap (Raydium / Jupiter)</td>
-            <td class="amount">-0.500000000 SOL</td>
-          </tr>
-          <tr>
-            <td>Trading fee to <span class="detail-mono">HR6x...vCoa</span></td>
-            <td class="amount">-0.004000000 SOL</td>
-          </tr>
-          <tr>
-            <td>App router fee to <span class="detail-mono">7MPp...4Bwy</span></td>
-            <td class="amount">-0.001000000 SOL</td>
-          </tr>
-        </tbody>
-      </table>
     </div>
 
-    <!-- RIGHT: Technical Details & Block Scheduler Telemetry -->
-    <div class="tech-card">
-      <div class="tech-header">
-        <h2 class="tech-title">Technical details</h2>
-        <p class="tech-subtitle">Signature, block, fee, compute & BankingStage</p>
+    <!-- Status Footer -->
+    <footer class="app-footer">
+      <div>AetherScan Decentralized RPC Cluster • Built for Solana Developers & Hackathons</div>
+      <div class="footer-nav-links">
+        <a href="https://github.com/RizulChauhan/solana-validator-telemetry-app" target="_blank">GitHub Repo</a>
+        <a href="https://poidh.xyz/base/bounty/1506" target="_blank">POIDH #1506</a>
+        <a href="#">Solana Docs</a>
       </div>
-
-      <div class="detail-row">
-        <span class="detail-label">Signature</span>
-        <span class="detail-val detail-mono" style="color:var(--accent-blue);">4Lmn...vor8 ❐</span>
-      </div>
-
-      <div class="detail-row">
-        <span class="detail-label">Block (Slot)</span>
-        <span class="detail-val detail-mono">458,600,951</span>
-      </div>
-
-      <div class="detail-row">
-        <span class="detail-label">Time</span>
-        <span class="detail-val">22:29:20 UTC</span>
-      </div>
-
-      <div class="detail-row">
-        <span class="detail-label">Fee payer</span>
-        <span class="detail-val detail-mono">3Tam...XhUP</span>
-      </div>
-
-      <div class="detail-row">
-        <span class="detail-label">Status</span>
-        <span class="detail-val" style="color:var(--green-text);">Success, finalized</span>
-      </div>
-
-      <div class="detail-row">
-        <span class="detail-label">Network fee</span>
-        <div class="detail-val">
-          <div class="detail-mono">0.000011803 SOL</div>
-          <div style="font-size:0.75rem; color:var(--text-muted); font-weight:normal;">Base 0.000005 + Priority 0.0000068</div>
-        </div>
-      </div>
-
-      <div class="detail-row">
-        <span class="detail-label">Compute used</span>
-        <div class="detail-val">
-          <span class="compute-pill">149,955 / 227,931</span>
-        </div>
-      </div>
-
-      <div class="detail-row">
-        <span class="detail-label">Tx Version</span>
-        <span class="detail-val">1 (Address Lookup Table)</span>
-      </div>
-
-      <div class="detail-row">
-        <span class="detail-label">Balance changes</span>
-        <span class="compute-pill">11 accounts</span>
-      </div>
-
-      <div class="links-footer">
-        <a href="#">Solscan</a>
-        <a href="#">Solana Explorer</a>
-        <a href="#">Raw JSON</a>
-      </div>
-    </div>
-
+    </footer>
   </div>
 
 </body>
