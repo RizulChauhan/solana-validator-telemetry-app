@@ -3,197 +3,539 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Solana Validator Ordering Audit & Telemetry App</title>
+  <title>Solana Transaction & Validator Telemetry Receipt — Clean Minimalist Explorer</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
   <style>
     :root {
-      --bg: #0b0f19;
-      --card: #151d30;
-      --accent: #00ff88;
-      --cyan: #00d2ff;
-      --purple: #9945ff;
-      --text: #e2e8f0;
-      --muted: #94a3b8;
+      --bg: #FAFBFC;
+      --card-bg: #FFFFFF;
+      --border: #EAECF0;
+      --border-subtle: #F2F4F7;
+      --text-main: #101828;
+      --text-secondary: #475467;
+      --text-muted: #98A2B3;
+      --green-bg: #ECFDF3;
+      --green-border: #D1FADF;
+      --green-text: #027A48;
+      --solana-purple: #9945FF;
+      --solana-green: #14F195;
+      --accent-blue: #0062FF;
+      --tag-gray: #F2F4F7;
+      --font-sans: 'Plus Jakarta Sans', -apple-system, sans-serif;
+      --font-mono: 'JetBrains Mono', monospace;
     }
-    body {
+
+    * {
+      box-sizing: border-box;
       margin: 0;
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-      background: var(--bg);
-      color: var(--text);
+      padding: 0;
+    }
+
+    body {
+      background-color: var(--bg);
+      color: var(--text-main);
+      font-family: var(--font-sans);
+      -webkit-font-smoothing: antialiased;
+      padding: 32px 24px 64px 24px;
       display: flex;
       flex-direction: column;
       align-items: center;
-      padding: 24px;
     }
-    .header {
-      max-width: 900px;
+
+    .top-bar {
+      max-width: 1180px;
       width: 100%;
-      text-align: center;
-      margin-bottom: 32px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 24px;
     }
-    h1 {
-      font-size: 2.2rem;
-      margin: 0 0 12px 0;
-      background: linear-gradient(135deg, var(--cyan), var(--accent));
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-    }
-    p.lead {
-      color: var(--muted);
-      font-size: 1.1rem;
-      margin: 0;
-    }
-    .grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-      gap: 20px;
-      max-width: 900px;
-      width: 100%;
-      margin-bottom: 32px;
-    }
-    .card {
-      background: var(--card);
-      border-radius: 12px;
-      padding: 20px;
-      border: 1px solid rgba(255, 255, 255, 0.08);
-      box-shadow: 0 8px 24px rgba(0,0,0,0.3);
-    }
-    .card h3 {
-      margin-top: 0;
-      color: var(--cyan);
-      font-size: 1.2rem;
-    }
-    .metric {
-      font-size: 2.4rem;
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
       font-weight: 700;
-      color: var(--accent);
-      margin: 8px 0;
+      font-size: 1.15rem;
+      letter-spacing: -0.02em;
     }
-    .badge {
-      display: inline-block;
+
+    .brand-pill {
+      background: #111;
+      color: #fff;
       padding: 4px 10px;
-      border-radius: 20px;
-      font-size: 0.8rem;
+      border-radius: 6px;
+      font-size: 0.75rem;
       font-weight: 600;
-      background: rgba(0, 210, 255, 0.15);
-      color: var(--cyan);
+      font-family: var(--font-mono);
     }
-    table {
+
+    .network-badge {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 0.85rem;
+      color: var(--text-secondary);
+      background: #fff;
+      padding: 6px 14px;
+      border-radius: 100px;
+      border: 1px solid var(--border);
+      font-weight: 500;
+    }
+
+    .pulse-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--solana-green);
+      box-shadow: 0 0 0 3px rgba(20, 241, 149, 0.25);
+    }
+
+    /* Search bar */
+    .search-box {
+      max-width: 1180px;
+      width: 100%;
+      background: #FFFFFF;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 8px 12px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      box-shadow: 0 1px 3px rgba(16, 24, 40, 0.05);
+      margin-bottom: 32px;
+    }
+
+    .search-input {
+      border: none;
+      outline: none;
+      font-family: var(--font-mono);
+      font-size: 0.85rem;
+      color: var(--text-secondary);
+      flex: 1;
+      background: transparent;
+    }
+
+    .search-btn {
+      background: #101828;
+      color: #fff;
+      border: none;
+      padding: 8px 18px;
+      border-radius: 8px;
+      font-weight: 600;
+      font-size: 0.85rem;
+      cursor: pointer;
+    }
+
+    /* Main Container Grid */
+    .explorer-grid {
+      max-width: 1180px;
+      width: 100%;
+      display: grid;
+      grid-template-columns: 1.8fr 1.1fr;
+      gap: 28px;
+    }
+
+    /* Left Card: Transaction Receipt */
+    .receipt-card {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 32px;
+      box-shadow: 0 2px 6px rgba(16, 24, 40, 0.04);
+    }
+
+    .status-row {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 20px;
+    }
+
+    .badge-success {
+      background: var(--green-bg);
+      border: 1px solid var(--green-border);
+      color: var(--green-text);
+      font-size: 0.78rem;
+      font-weight: 700;
+      letter-spacing: 0.03em;
+      padding: 4px 10px;
+      border-radius: 6px;
+      text-transform: uppercase;
+      font-family: var(--font-mono);
+    }
+
+    .sub-status {
+      font-size: 0.85rem;
+      color: var(--text-muted);
+    }
+
+    .tx-title {
+      font-size: 1.75rem;
+      font-weight: 800;
+      letter-spacing: -0.03em;
+      margin-bottom: 8px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .verified-pill {
+      font-size: 0.7rem;
+      font-weight: 600;
+      padding: 3px 8px;
+      border-radius: 4px;
+      background: #FEF3F2;
+      color: #B42318;
+      border: 1px solid #FECDCA;
+    }
+
+    .tx-meta {
+      font-size: 0.85rem;
+      color: var(--text-muted);
+      margin-bottom: 32px;
+    }
+
+    /* Swap Flow Visual Box */
+    .swap-flow {
+      background: #F8F9FC;
+      border: 1px solid var(--border-subtle);
+      border-radius: 14px;
+      padding: 24px 28px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 32px;
+    }
+
+    .swap-col {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .swap-label {
+      font-size: 0.75rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      color: var(--text-muted);
+      margin-bottom: 6px;
+      letter-spacing: 0.04em;
+    }
+
+    .swap-val {
+      font-size: 1.85rem;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .swap-usd {
+      font-size: 0.85rem;
+      color: var(--text-muted);
+      margin-top: 4px;
+    }
+
+    .swap-arrow {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      background: #FFFFFF;
+      border: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 700;
+      color: var(--text-secondary);
+      box-shadow: 0 2px 4px rgba(0,0,0,0.03);
+    }
+
+    /* Actions and Breakdown */
+    .button-group {
+      display: flex;
+      gap: 12px;
+      margin-bottom: 32px;
+    }
+
+    .btn-secondary {
+      background: #FFFFFF;
+      border: 1px solid var(--border);
+      padding: 10px 18px;
+      border-radius: 8px;
+      font-weight: 600;
+      font-size: 0.85rem;
+      color: var(--text-main);
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      text-decoration: none;
+      box-shadow: 0 1px 2px rgba(16,24,40,0.05);
+    }
+
+    .table-section-title {
+      font-size: 0.95rem;
+      font-weight: 700;
+      margin-bottom: 12px;
+    }
+
+    .ledger-table {
       width: 100%;
       border-collapse: collapse;
-      margin-top: 16px;
     }
-    th, td {
-      padding: 10px 12px;
-      text-align: left;
-      border-bottom: 1px solid rgba(255,255,255,0.06);
-      font-size: 0.9rem;
+
+    .ledger-table tr {
+      border-bottom: 1px solid var(--border-subtle);
     }
-    th {
-      color: var(--muted);
-      text-transform: uppercase;
-      font-size: 0.75rem;
-      letter-spacing: 0.05em;
+
+    .ledger-table td {
+      padding: 14px 4px;
+      font-size: 0.88rem;
     }
-    .club-box {
-      max-width: 900px;
-      width: 100%;
-      background: linear-gradient(135deg, rgba(153, 69, 255, 0.1), rgba(0, 210, 255, 0.1));
-      border: 1px solid rgba(153, 69, 255, 0.3);
-      border-radius: 12px;
-      padding: 24px;
-      box-sizing: border-box;
-      margin-bottom: 32px;
+
+    .ledger-table td.amount {
+      text-align: right;
+      font-family: var(--font-mono);
+      font-weight: 600;
+      color: #D92D20;
     }
-    .club-box h2 {
-      margin-top: 0;
-      color: var(--purple);
+
+    /* Right Card: Technical Details */
+    .tech-card {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 28px;
+      box-shadow: 0 2px 6px rgba(16, 24, 40, 0.04);
+      height: fit-content;
     }
-    footer {
-      color: var(--muted);
-      font-size: 0.85rem;
-      text-align: center;
+
+    .tech-header {
+      margin-bottom: 24px;
     }
-    footer a {
-      color: var(--cyan);
+
+    .tech-title {
+      font-size: 1.15rem;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+    }
+
+    .tech-subtitle {
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      margin-top: 2px;
+    }
+
+    .detail-row {
+      display: flex;
+      justify-content: space-between;
+      padding: 14px 0;
+      border-bottom: 1px solid var(--border-subtle);
+      font-size: 0.88rem;
+    }
+
+    .detail-label {
+      color: var(--text-secondary);
+      font-weight: 500;
+    }
+
+    .detail-val {
+      font-weight: 600;
+      text-align: right;
+      color: var(--text-main);
+    }
+
+    .detail-mono {
+      font-family: var(--font-mono);
+      font-size: 0.82rem;
+    }
+
+    .compute-pill {
+      background: #F8F9FC;
+      border: 1px solid var(--border);
+      padding: 2px 8px;
+      border-radius: 6px;
+      font-size: 0.78rem;
+      font-family: var(--font-mono);
+    }
+
+    .links-footer {
+      display: flex;
+      gap: 16px;
+      margin-top: 24px;
+      font-size: 0.8rem;
+      color: var(--accent-blue);
+      font-weight: 600;
+    }
+
+    .links-footer a {
+      color: var(--text-secondary);
       text-decoration: none;
     }
   </style>
 </head>
 <body>
-  <div class="header">
-    <span class="badge">NPC Season One App</span>
-    <h1>Solana Validator Block Scheduler Telemetry</h1>
-    <p class="lead">Real-time empirical audit of BankingStage multi-threaded transaction ordering on Solana Mainnet.</p>
-  </div>
 
-  <div class="grid">
-    <div class="card">
-      <h3>Analyzed Validators</h3>
-      <div class="metric">3,938</div>
-      <p style="color:var(--muted); font-size: 0.9rem;">Cluster nodes indexed across 5 distinct client versions (v4.3.2, v4.3.0, v2.3.8).</p>
+  <!-- Top Navigation Bar -->
+  <div class="top-bar">
+    <div class="brand">
+      <span>Solana Telemetry</span>
+      <span class="brand-pill">RECEIPT V2</span>
     </div>
-    <div class="card">
-      <h3>Scheduling Model</h3>
-      <div class="metric">Non-Monotonic</div>
-      <p style="color:var(--muted); font-size: 0.9rem;">Multi-threaded BankingStage TPU queues process non-conflicting locks in parallel.</p>
-    </div>
-    <div class="card">
-      <h3>Spearman Rank (ρ)</h3>
-      <div class="metric">1.0</div>
-      <p style="color:var(--muted); font-size: 0.9rem;">Empirical correlation verified across active leader slots on Mainnet-Beta.</p>
+    <div class="network-badge">
+      <span class="pulse-dot"></span>
+      <span>Solana Mainnet-Beta</span>
+      <span style="color:var(--text-muted); font-size: 0.8rem;">• SOL $100.72</span>
     </div>
   </div>
 
-  <div class="card" style="max-width: 900px; width: 100%; box-sizing: border-box; margin-bottom: 32px;">
-    <h3>Recent Live Block Telemetry</h3>
-    <table>
-      <thead>
-        <tr>
-          <th>Slot</th>
-          <th>Transactions</th>
-          <th>Priority Fee Ratio</th>
-          <th>Ordering Rule</th>
-          <th>Status</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr>
-          <td><a href="https://solscan.io/block/461333384" style="color:var(--cyan); text-decoration:none;">461333384</a></td>
-          <td>613 txs</td>
-          <td>Standard Gas</td>
-          <td>Parallel BankingStage</td>
-          <td><span class="badge" style="background:rgba(0,255,136,0.15); color:var(--accent);">VERIFIED</span></td>
-        </tr>
-        <tr>
-          <td><a href="https://solscan.io/block/461333380" style="color:var(--cyan); text-decoration:none;">461333380</a></td>
-          <td>575 txs</td>
-          <td>Standard Gas</td>
-          <td>Parallel BankingStage</td>
-          <td><span class="badge" style="background:rgba(0,255,136,0.15); color:var(--accent);">VERIFIED</span></td>
-        </tr>
-        <tr>
-          <td><a href="https://solscan.io/block/461333376" style="color:var(--cyan); text-decoration:none;">461333376</a></td>
-          <td>403 txs</td>
-          <td>Standard Gas</td>
-          <td>Parallel BankingStage</td>
-          <td><span class="badge" style="background:rgba(0,255,136,0.15); color:var(--accent);">VERIFIED</span></td>
-        </tr>
-      </tbody>
-    </table>
+  <!-- Search Input Bar -->
+  <div class="search-box">
+    <svg width="18" height="18" fill="none" stroke="#98A2B3" stroke-width="2" viewBox="0 0 24 24"><path d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+    <input type="text" class="search-input" value="4LmnQiQD1qZCb7w1AaE1KLJoS7C1QjPx3AtDDyu45CRwSXovZwFtutKydXoest8q2TgMhHF2FFCtGL7srTBvor8" readonly>
+    <button class="search-btn">Search</button>
   </div>
 
-  <div class="club-box">
-    <h2>🤝 Bringing Our Community Together Through an NPC Club</h2>
-    <p>How <strong>Solana Validator Telemetry</strong> powers an active Club inside NPC Season One:</p>
-    <ul>
-      <li><strong>Block Forensics Requests:</strong> Club members paste any transaction or slot signature that experienced slippage or delay to receive an instant queue breakdown.</li>
-      <li><strong>Validator Leaderboard & MEV Tracking:</strong> Community crowdsources fee-sandwich anomalies and tracks non-standard Jito bundles in real time.</li>
-      <li><strong>Open Collaborative Research:</strong> Club researchers co-author open-source benchmark modules to analyze Firedancer and Agave scheduler upgrades.</li>
-    </ul>
+  <!-- Main Explorer Grid -->
+  <div class="explorer-grid">
+
+    <!-- LEFT: Transaction Clean Receipt -->
+    <div class="receipt-card">
+      <div class="status-row">
+        <span class="badge-success">SWAP COMPLETE</span>
+        <span class="sub-status">Final, can't be reversed</span>
+      </div>
+
+      <h1 class="tx-title">
+        Swapped SOL for zkat
+        <span class="verified-pill">unverified</span>
+      </h1>
+      <p class="tx-meta">By 3Tam...XhUP • Via Jupiter Router • Oct 18, 2026, 22:29 UTC</p>
+
+      <!-- Clean Swap Flow Box -->
+      <div class="swap-flow">
+        <div class="swap-col">
+          <span class="swap-label">Sent</span>
+          <div class="swap-val">
+            <span>0.5</span>
+            <span style="font-size: 1.1rem; color: var(--text-secondary);">SOL</span>
+          </div>
+          <span class="swap-usd">≈ $50.36 USD</span>
+        </div>
+
+        <div class="swap-arrow">→</div>
+
+        <div class="swap-col" style="text-align: right;">
+          <span class="swap-label">Got</span>
+          <div class="swap-val">
+            <span style="color: var(--text-main);">340.1K</span>
+            <span style="font-size: 1.1rem; color: var(--text-secondary);">zkat</span>
+          </div>
+          <span class="swap-usd">Balance now 679.3K</span>
+        </div>
+      </div>
+
+      <!-- Action Buttons -->
+      <div class="button-group">
+        <a href="#" class="btn-secondary">
+          <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M10 13a5 5 0 007.54.54l3-3a5 5 0 00-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 00-7.54-.54l-3 3a5 5 0 007.07 7.07l1.71-1.71"/></svg>
+          Copy link
+        </a>
+        <a href="https://solscan.io" target="_blank" class="btn-secondary">
+          <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6"/><path d="M15 3h6v6"/><path d="M10 14L21 3"/></svg>
+          View on Solscan
+        </a>
+      </div>
+
+      <!-- Where the money went (Audit Ledger) -->
+      <h3 class="table-section-title">Where the money went</h3>
+      <p style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 12px;">All transfers verified from leader block assembly and BankingStage write-locks:</p>
+      
+      <table class="ledger-table">
+        <tbody>
+          <tr>
+            <td>For the swap (Raydium / Jupiter)</td>
+            <td class="amount">-0.500000000 SOL</td>
+          </tr>
+          <tr>
+            <td>Trading fee to <span class="detail-mono">HR6x...vCoa</span></td>
+            <td class="amount">-0.004000000 SOL</td>
+          </tr>
+          <tr>
+            <td>App router fee to <span class="detail-mono">7MPp...4Bwy</span></td>
+            <td class="amount">-0.001000000 SOL</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- RIGHT: Technical Details & Block Scheduler Telemetry -->
+    <div class="tech-card">
+      <div class="tech-header">
+        <h2 class="tech-title">Technical details</h2>
+        <p class="tech-subtitle">Signature, block, fee, compute & BankingStage</p>
+      </div>
+
+      <div class="detail-row">
+        <span class="detail-label">Signature</span>
+        <span class="detail-val detail-mono" style="color:var(--accent-blue);">4Lmn...vor8 ❐</span>
+      </div>
+
+      <div class="detail-row">
+        <span class="detail-label">Block (Slot)</span>
+        <span class="detail-val detail-mono">458,600,951</span>
+      </div>
+
+      <div class="detail-row">
+        <span class="detail-label">Time</span>
+        <span class="detail-val">22:29:20 UTC</span>
+      </div>
+
+      <div class="detail-row">
+        <span class="detail-label">Fee payer</span>
+        <span class="detail-val detail-mono">3Tam...XhUP</span>
+      </div>
+
+      <div class="detail-row">
+        <span class="detail-label">Status</span>
+        <span class="detail-val" style="color:var(--green-text);">Success, finalized</span>
+      </div>
+
+      <div class="detail-row">
+        <span class="detail-label">Network fee</span>
+        <div class="detail-val">
+          <div class="detail-mono">0.000011803 SOL</div>
+          <div style="font-size:0.75rem; color:var(--text-muted); font-weight:normal;">Base 0.000005 + Priority 0.0000068</div>
+        </div>
+      </div>
+
+      <div class="detail-row">
+        <span class="detail-label">Compute used</span>
+        <div class="detail-val">
+          <span class="compute-pill">149,955 / 227,931</span>
+        </div>
+      </div>
+
+      <div class="detail-row">
+        <span class="detail-label">Tx Version</span>
+        <span class="detail-val">1 (Address Lookup Table)</span>
+      </div>
+
+      <div class="detail-row">
+        <span class="detail-label">Balance changes</span>
+        <span class="compute-pill">11 accounts</span>
+      </div>
+
+      <div class="links-footer">
+        <a href="#">Solscan</a>
+        <a href="#">Solana Explorer</a>
+        <a href="#">Raw JSON</a>
+      </div>
+    </div>
+
   </div>
 
-  <footer>
-    <p>Built with ❤️ by <strong>Rizul Chauhan</strong> (<a href="https://github.com/RizulChauhan/solana-validator-ordering-audit">@RizulChauhan</a>) | Payout: <code>0xB0fc11e067c57aa0DCEB398747847c6F25a369A1</code></p>
-  </footer>
 </body>
 </html>
